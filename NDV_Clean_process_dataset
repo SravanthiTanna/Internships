@@ -1,0 +1,76 @@
+# netflix_cleaning_v2.py
+
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import LabelEncoder
+
+# Step 1: Load the dataset
+netflix_df = pd.read_csv('/content/drive/MyDrive/netflix_titles.csv')
+print("Dataset loaded with shape:", netflix_df.shape)
+
+# Step 2: Initial exploration
+print("\nSample records:")
+print(netflix_df.sample(5))
+
+# Step 3: Handling Missing Values
+print("\nMissing values before cleaning:")
+print(netflix_df.isnull().sum())
+
+# Fill NA statistical values
+netflix_df['director'] = netflix_df['director'].fillna('N/A')
+netflix_df['cast'] = netflix_df['cast'].fillna('Unknown Cast')
+netflix_df['country'] = netflix_df['country'].fillna(netflix_df['country'].mode()[0])
+netflix_df['rating'] = netflix_df['rating'].fillna('NR')  # NR = Not Rated
+netflix_df['duration'] = netflix_df['duration'].fillna('Unspecified')
+netflix_df['date_added'] = netflix_df['date_added'].fillna(method='ffill')
+
+# Step 4: Visualize Missing Values
+plt.figure(figsize=(10, 6))
+sns.heatmap(netflix_df.isnull(), cmap='magma', cbar=False)
+plt.title("Missing Data Heatmap")
+plt.show()
+
+# Step 5: Remove duplicates
+initial_rows = len(netflix_df)
+netflix_df.drop_duplicates(inplace=True)
+print(f" Removed {initial_rows - len(netflix_df)} duplicate rows.")
+
+# Step 6: Data type conversions
+netflix_df['date_added'] = pd.to_datetime(netflix_df['date_added'], errors='coerce')
+netflix_df['release_year'] = pd.to_numeric(netflix_df['release_year'], errors='coerce', downcast='integer')
+
+# Step 7: NumPy operation – Mean release year
+mean_year = np.nanmean(netflix_df['release_year'])
+print(f"\n Average Release Year: {int(mean_year)}")
+
+# Step 8: Filtering and Grouping
+movies_only = netflix_df[netflix_df['type'] == 'Movie']
+shows_only = netflix_df[netflix_df['type'] == 'TV Show']
+print(f"\n Total Movies: {len(movies_only)}")
+print(f" Total TV Shows: {len(shows_only)}")
+
+# Top countries by content count
+top_countries = netflix_df['country'].value_counts().head(10)
+print("\nTop 10 countries by number of titles:")
+print(top_countries)
+
+# Step 9: Correlation matrix for numerical data
+num_features = netflix_df.select_dtypes(include=np.number)
+plt.figure(figsize=(8, 6))
+sns.heatmap(num_features.corr(), annot=True, cmap='YlGnBu')
+plt.title("Numerical Feature Correlation")
+plt.show()
+
+# Step 10: Label Encoding for 'type'
+encoder = LabelEncoder()
+netflix_df['type_code'] = encoder.fit_transform(netflix_df['type'])
+
+# Final Check
+print("\n Cleaned Dataset Info:")
+print(netflix_df.info())
+
+# Save cleaned dataset (optional)
+netflix_df.to_csv("cleaned_netflix_data_v2.csv", index=False)
+print(" Cleaned data saved as 'cleaned_netflix_data_v2.csv'")
