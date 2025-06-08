@@ -1,0 +1,96 @@
+import json
+import os
+FILENAME = "students.json"
+def load_data():
+    if os.path.exists(FILENAME):
+        with open(FILENAME, "r") as file:
+            return json.load(file)
+    return {}
+def save_data(data):
+    with open(FILENAME, "w") as file:
+        json.dump(data, file, indent=4)
+def add_student():
+    data = load_data()
+    roll = input("Enter Roll Number: ")
+    if roll in data:
+        print("Student already exists!")
+        return
+    name = input("Enter Name: ")
+    branch = input("Enter Branch: ")
+    marks = float(input("Enter Marks: "))
+    data[roll] = {"Name": name, "Branch": branch, "Marks": marks}
+    save_data(data)
+    print("Student added successfully.")
+def view_student():
+    data = load_data()
+    roll = input("Enter Roll Number to view: ")
+    student = data.get(roll)
+    if student:
+        print(f"Roll No: {roll}")
+        for key, value in student.items():
+            print(f"{key}: {value}")
+    else:
+        print("Student not found.")
+def update_student():
+    data = load_data()
+    roll = input("Enter Roll Number to update: ")
+    if roll in data:
+        print("Leave field blank to keep current value.")
+        name = input(f"Enter New Name ({data[roll]['Name']}): ") or data[roll]['Name']
+        branch = input(f"Enter New Branch ({data[roll]['Branch']}): ") or data[roll]['Branch']
+        marks = input(f"Enter New Marks ({data[roll]['Marks']}): ")
+        data[roll] = {
+            "Name": name,
+            "Branch": branch,
+            "Marks": float(marks) if marks else data[roll]['Marks']
+        }
+        save_data(data)
+        print("Student updated successfully.")
+    else:
+        print("Student not found.")
+def delete_student():
+    data = load_data()
+    roll = input("Enter Roll Number to delete: ")
+    if roll in data:
+        del data[roll]
+        save_data(data)
+        print("Student deleted successfully.")
+    else:
+        print("Student not found.")
+def view_all_students():
+    data = load_data()
+    if not data:
+        print("No student records found.")
+        return
+    for roll, details in data.items():
+        print(f"Roll No: {roll}, Name: {details['Name']}, Branch: {details['Branch']}, Marks: {details['Marks']}")
+
+def menu():
+    while True:
+        print("\n=== Student Record Management ===")
+        print("1. Add Student")
+        print("2. View Student")
+        print("3. Update Student")
+        print("4. Delete Student")
+        print("5. View All Students")
+        print("6. Exit")
+        choice = input("Enter your choice: ")
+
+        if choice == "1":
+            add_student()
+        elif choice == "2":
+            view_student()
+        elif choice == "3":
+            update_student()
+        elif choice == "4":
+            delete_student()
+        elif choice == "5":
+            view_all_students()
+        elif choice == "6":
+            print("Exiting program.")
+            break
+        else:
+            print("Invalid choice. Please try again.")
+
+if __name__ == "__main__":
+    menu()
